@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "binarybear": {
+      "command": "python3",
+      "args": [
+        "/path/binarybear_mcp.py",
+        "--server",
+        "http://IPADDRESS:8888"
+      ],
+      "description": "BinaryBear v1.0 - Binary Analysis & Reverse Engineering MCP Server",
+      "timeout": 300,
+      "alwaysAllow": []
+    }
+  }
+}
