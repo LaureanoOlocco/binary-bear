@@ -1,10 +1,10 @@
-# BinaryBear Binary Analysis & Reverse Engineering v1.0
+# BEAR - Binary Exploitation & Automated Reversing v1.0
 #
 # INSTALLATION COMMANDS:
-# python3 -m venv binarybear_env
-# source binarybear_env/bin/activate
+# python3 -m venv bear_env
+# source bear_env/bin/activate
 # python3 -m pip install -r requirements.txt
-# python3 binarybear_server.py
+# python3 bear_server.py
 
 # ============================================================================
 # CORE FRAMEWORK DEPENDENCIES
@@ -26,7 +26,7 @@ bcrypt==4.0.1                   # Pin bcrypt version for passlib compatibility
 # EXTERNAL BINARY ANALYSIS TOOLS (Install separately)
 # ============================================================================
 #
-# BinaryBear v1.0 Binary Analysis Edition integrates with 25+ external tools
+# BEAR v1.0 integrates with 25+ external tools
 # that must be installed separately from their official sources:
 #
 # Core Binary Analysis:

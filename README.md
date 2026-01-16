@@ -1,23 +1,11 @@
 <div align="center">
 
-```
-   ██████╗ ██╗███╗   ██╗ █████╗ ██████╗ ██╗   ██╗
-   ██╔══██╗██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝
-   ██████╔╝██║██╔██╗ ██║███████║██████╔╝ ╚████╔╝
-   ██╔══██╗██║██║╚██╗██║██╔══██║██╔══██╗  ╚██╔╝
-   ██████╔╝██║██║ ╚████║██║  ██║██║  ██║   ██║
-   ╚═════╝ ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝
-   ██████╗ ███████╗ █████╗ ██████╗
-   ██╔══██╗██╔════╝██╔══██╗██╔══██╗
-   ██████╔╝█████╗  ███████║██████╔╝
-   ██╔══██╗██╔══╝  ██╔══██║██╔══██╗
-   ██████╔╝███████╗██║  ██║██║  ██║
-   ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝
-                    🐻 v1.0
-```
+<p align="center">
+  <img src="assets/bear-logo.png" width="200" alt="BEAR logo">
+</p>
 
-# Binary Bear MCP v1.0
-### Binary Analysis & Reverse Engineering MCP Server
+# BEAR v1.0
+### Binary Exploitation & Automated Reversing
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -31,7 +19,7 @@
 
 ## Overview
 
-Binary Bear is an MCP (Model Context Protocol) server that provides AI agents with access to binary analysis and reverse engineering tools. It enables AI assistants like Claude, GPT, or Copilot to execute security tools for authorized penetration testing and CTF challenges.
+BEAR (Binary Exploitation & Automated Reversing) is an MCP (Model Context Protocol) server that provides AI agents with access to binary analysis and reverse engineering tools. It enables AI assistants like Claude, GPT, or Copilot to execute security tools for authorized penetration testing and CTF challenges.
 
 ## Features
 
@@ -47,8 +35,8 @@ Binary Bear is an MCP (Model Context Protocol) server that provides AI agents wi
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/binary-bear.git
-cd binary-bear
+git clone https://github.com/your-username/bear.git
+cd bear
 
 # Create virtual environment
 python3 -m venv venv
@@ -77,7 +65,7 @@ sudo apt install gdb binwalk checksec strings objdump
 ### Start the Server
 
 ```bash
-python3 binarybear_server.py
+python3 bear_server.py
 ```
 
 ### MCP Client Configuration
@@ -87,9 +75,9 @@ python3 binarybear_server.py
 ```json
 {
   "mcpServers": {
-    "binary-bear": {
+    "bear": {
       "command": "python3",
-      "args": ["/path/to/binary-bear/binarybear_mcp.py"]
+      "args": ["/path/to/bear/bear_mcp.py"]
     }
   }
 }

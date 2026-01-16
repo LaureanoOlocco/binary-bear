@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BinaryBear Binary Analysis MCP Client - Binary Analysis & Reverse Engineering Interface
+BEAR MCP Client - Binary Exploitation & Automated Reversing Interface
 
 Specialized for Binary Analysis & Reverse Engineering
 Debuggers | Disassemblers | Exploit Development | Memory Forensics
@@ -23,7 +23,7 @@ TOOLS AVAILABLE (25+):
 - MSFVenom - Payload generator
 - UPX - Executable packer/unpacker
 
-Architecture: MCP Client for AI agent communication with BinaryBear server
+Architecture: MCP Client for AI agent communication with BEAR server
 Framework: FastMCP integration for tool orchestration
 """
 
@@ -38,7 +38,7 @@ from datetime import datetime
 
 from mcp.server.fastmcp import FastMCP
 
-class BinaryBearColors:
+class BearColors:
     """Enhanced color palette for terminal output"""
 
     # Basic colors
@@ -83,17 +83,17 @@ class BinaryBearColors:
     TOOL_FAILED = '\033[38;5;196m\033[1m'
 
 # Backward compatibility alias
-Colors = BinaryBearColors
+Colors = BearColors
 
 class ColoredFormatter(logging.Formatter):
     """Enhanced formatter with colors and emojis"""
 
     COLORS = {
-        'DEBUG': BinaryBearColors.DEBUG,
-        'INFO': BinaryBearColors.SUCCESS,
-        'WARNING': BinaryBearColors.WARNING,
-        'ERROR': BinaryBearColors.ERROR,
-        'CRITICAL': BinaryBearColors.CRITICAL
+        'DEBUG': BearColors.DEBUG,
+        'INFO': BearColors.SUCCESS,
+        'WARNING': BearColors.WARNING,
+        'ERROR': BearColors.ERROR,
+        'CRITICAL': BearColors.CRITICAL
     }
 
     EMOJIS = {
@@ -106,14 +106,14 @@ class ColoredFormatter(logging.Formatter):
 
     def format(self, record):
         emoji = self.EMOJIS.get(record.levelname, '')
-        color = self.COLORS.get(record.levelname, BinaryBearColors.BRIGHT_WHITE)
-        record.msg = f"{color}{emoji} {record.msg}{BinaryBearColors.RESET}"
+        color = self.COLORS.get(record.levelname, BearColors.BRIGHT_WHITE)
+        record.msg = f"{color}{emoji} {record.msg}{BearColors.RESET}"
         return super().format(record)
 
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format="[BinaryBear MCP] %(asctime)s [%(levelname)s] %(message)s",
+    format="[BEAR MCP] %(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(sys.stderr)
     ]
@@ -121,19 +121,19 @@ logging.basicConfig(
 
 for handler in logging.getLogger().handlers:
     handler.setFormatter(ColoredFormatter(
-        "[BinaryBear MCP] %(asctime)s [%(levelname)s] %(message)s",
+        "[BEAR MCP] %(asctime)s [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     ))
 
 logger = logging.getLogger(__name__)
 
 # Default configuration
-DEFAULT_BINARYBEAR_SERVER = "http://127.0.0.1:8888"
+DEFAULT_BEAR_SERVER = "http://127.0.0.1:8888"
 DEFAULT_REQUEST_TIMEOUT = 300
 MAX_RETRIES = 3
 
-class BinaryBearClient:
-    """Client for communicating with the BinaryBear API Server"""
+class BearClient:
+    """Client for communicating with the BEAR API Server"""
 
     def __init__(self, server_url: str, timeout: int = DEFAULT_REQUEST_TIMEOUT):
         self.server_url = server_url.rstrip("/")
@@ -143,13 +143,13 @@ class BinaryBearClient:
         connected = False
         for i in range(MAX_RETRIES):
             try:
-                logger.info(f"Attempting to connect to BinaryBear API at {server_url} (attempt {i+1}/{MAX_RETRIES})")
+                logger.info(f"Attempting to connect to BEAR API at {server_url} (attempt {i+1}/{MAX_RETRIES})")
                 try:
                     test_response = self.session.get(f"{self.server_url}/health", timeout=5)
                     test_response.raise_for_status()
                     health_check = test_response.json()
                     connected = True
-                    logger.info(f"Successfully connected to BinaryBear API Server at {server_url}")
+                    logger.info(f"Successfully connected to BEAR API Server at {server_url}")
                     logger.info(f"Server health status: {health_check.get('status', 'unknown')}")
                     break
                 except requests.exceptions.ConnectionError:
@@ -163,7 +163,7 @@ class BinaryBearClient:
                 time.sleep(2)
 
         if not connected:
-            logger.error(f"Failed to connect to BinaryBear API Server at {server_url} after {MAX_RETRIES} attempts")
+            logger.error(f"Failed to connect to BEAR API Server at {server_url} after {MAX_RETRIES} attempts")
 
     def safe_get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if params is None:
@@ -200,9 +200,9 @@ class BinaryBearClient:
         return self.safe_get("health")
 
 
-def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
+def setup_mcp_server(bear_client: BearClient) -> FastMCP:
     """Set up the MCP server with Binary Analysis & Reverse Engineering tools"""
-    mcp = FastMCP("binarybear-binary-analysis-mcp")
+    mcp = FastMCP("bear-mcp")
 
     # ============================================================================
     # CORE BINARY ANALYSIS TOOLS
@@ -229,7 +229,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting GDB analysis: {binary}")
-        result = binarybear_client.safe_post("api/tools/gdb", data)
+        result = bear_client.safe_post("api/tools/gdb", data)
         if result.get("success"):
             logger.info(f"GDB analysis completed for {binary}")
         else:
@@ -260,7 +260,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting GDB-PEDA analysis: {binary or f'PID {attach_pid}' or core_file}")
-        result = binarybear_client.safe_post("api/tools/gdb-peda", data)
+        result = bear_client.safe_post("api/tools/gdb-peda", data)
         if result.get("success"):
             logger.info(f"GDB-PEDA analysis completed")
         else:
@@ -291,7 +291,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting GDB-GEF analysis: {binary or f'PID {attach_pid}' or core_file}")
-        result = binarybear_client.safe_post("api/tools/gdb-gef", data)
+        result = bear_client.safe_post("api/tools/gdb-gef", data)
         if result.get("success"):
             logger.info(f"GDB-GEF analysis completed")
         else:
@@ -317,7 +317,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Radare2 analysis: {binary}")
-        result = binarybear_client.safe_post("api/tools/radare2", data)
+        result = bear_client.safe_post("api/tools/radare2", data)
         if result.get("success"):
             logger.info(f"Radare2 analysis completed for {binary}")
         else:
@@ -351,7 +351,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Ghidra analysis: {binary}")
-        result = binarybear_client.safe_post("api/tools/ghidra", data)
+        result = bear_client.safe_post("api/tools/ghidra", data)
         if result.get("success"):
             logger.info(f"Ghidra analysis completed for {binary}")
         else:
@@ -377,7 +377,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Binwalk analysis: {file_path}")
-        result = binarybear_client.safe_post("api/tools/binwalk", data)
+        result = bear_client.safe_post("api/tools/binwalk", data)
         if result.get("success"):
             logger.info(f"Binwalk analysis completed for {file_path}")
         else:
@@ -401,7 +401,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
         """
         data = {"binary": binary}
         logger.info(f"Starting Checksec analysis: {binary}")
-        result = binarybear_client.safe_post("api/tools/checksec", data)
+        result = bear_client.safe_post("api/tools/checksec", data)
         if result.get("success"):
             logger.info(f"Checksec analysis completed for {binary}")
         else:
@@ -429,7 +429,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Strings extraction: {file_path}")
-        result = binarybear_client.safe_post("api/tools/strings", data)
+        result = bear_client.safe_post("api/tools/strings", data)
         if result.get("success"):
             logger.info(f"Strings extraction completed for {file_path}")
         else:
@@ -458,7 +458,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Objdump analysis: {binary}")
-        result = binarybear_client.safe_post("api/tools/objdump", data)
+        result = bear_client.safe_post("api/tools/objdump", data)
         if result.get("success"):
             logger.info(f"Objdump analysis completed for {binary}")
         else:
@@ -492,7 +492,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Readelf analysis: {binary}")
-        result = binarybear_client.safe_post("api/tools/readelf", data)
+        result = bear_client.safe_post("api/tools/readelf", data)
         if result.get("success"):
             logger.info(f"Readelf analysis completed for {binary}")
         else:
@@ -523,7 +523,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting XXD hex dump: {file_path}")
-        result = binarybear_client.safe_post("api/tools/xxd", data)
+        result = bear_client.safe_post("api/tools/xxd", data)
         if result.get("success"):
             logger.info(f"XXD hex dump completed for {file_path}")
         else:
@@ -555,7 +555,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Hexdump analysis: {file_path}")
-        result = binarybear_client.safe_post("api/tools/hexdump", data)
+        result = bear_client.safe_post("api/tools/hexdump", data)
         if result.get("success"):
             logger.info(f"Hexdump analysis completed for {file_path}")
         else:
@@ -590,7 +590,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting ROPgadget search: {binary}")
-        result = binarybear_client.safe_post("api/tools/ropgadget", data)
+        result = bear_client.safe_post("api/tools/ropgadget", data)
         if result.get("success"):
             logger.info(f"ROPgadget search completed for {binary}")
         else:
@@ -624,7 +624,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Ropper analysis: {binary}")
-        result = binarybear_client.safe_post("api/tools/ropper", data)
+        result = bear_client.safe_post("api/tools/ropper", data)
         if result.get("success"):
             logger.info(f"Ropper analysis completed")
         else:
@@ -650,7 +650,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting one_gadget analysis: {libc_path}")
-        result = binarybear_client.safe_post("api/tools/one-gadget", data)
+        result = bear_client.safe_post("api/tools/one-gadget", data)
         if result.get("success"):
             logger.info(f"one_gadget analysis completed")
         else:
@@ -684,7 +684,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Pwntools exploit: {exploit_type}")
-        result = binarybear_client.safe_post("api/tools/pwntools", data)
+        result = bear_client.safe_post("api/tools/pwntools", data)
         if result.get("success"):
             logger.info(f"Pwntools exploit completed")
         else:
@@ -718,7 +718,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting angr analysis: {binary}")
-        result = binarybear_client.safe_post("api/tools/angr", data)
+        result = bear_client.safe_post("api/tools/angr", data)
         if result.get("success"):
             logger.info(f"angr analysis completed")
         else:
@@ -747,7 +747,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting libc-database {action}: {symbols or libc_id}")
-        result = binarybear_client.safe_post("api/tools/libc-database", data)
+        result = bear_client.safe_post("api/tools/libc-database", data)
         if result.get("success"):
             logger.info(f"libc-database {action} completed")
         else:
@@ -778,7 +778,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting pwninit setup: {binary}")
-        result = binarybear_client.safe_post("api/tools/pwninit", data)
+        result = bear_client.safe_post("api/tools/pwninit", data)
         if result.get("success"):
             logger.info(f"pwninit setup completed")
         else:
@@ -811,7 +811,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting UPX {action}: {binary}")
-        result = binarybear_client.safe_post("api/tools/upx", data)
+        result = bear_client.safe_post("api/tools/upx", data)
         if result.get("success"):
             logger.info(f"UPX {action} completed for {binary}")
         else:
@@ -844,7 +844,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Volatility analysis: {plugin}")
-        result = binarybear_client.safe_post("api/tools/volatility", data)
+        result = bear_client.safe_post("api/tools/volatility", data)
         if result.get("success"):
             logger.info(f"Volatility analysis completed")
         else:
@@ -873,7 +873,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting Volatility3 analysis: {plugin}")
-        result = binarybear_client.safe_post("api/tools/volatility3", data)
+        result = bear_client.safe_post("api/tools/volatility3", data)
         if result.get("success"):
             logger.info(f"Volatility3 analysis completed")
         else:
@@ -915,7 +915,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "additional_args": additional_args
         }
         logger.info(f"Starting MSFVenom payload generation: {payload}")
-        result = binarybear_client.safe_post("api/tools/msfvenom", data)
+        result = bear_client.safe_post("api/tools/msfvenom", data)
         if result.get("success"):
             logger.info(f"MSFVenom payload generated")
         else:
@@ -946,7 +946,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             data["filename"] = filename
 
         logger.info(f"Generating {payload_type} payload: {size} bytes")
-        result = binarybear_client.safe_post("api/payloads/generate", data)
+        result = bear_client.safe_post("api/payloads/generate", data)
         if result.get("success"):
             logger.info(f"Payload generated successfully")
         else:
@@ -976,7 +976,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "binary": binary
         }
         logger.info(f"Creating file: {filename}")
-        result = binarybear_client.safe_post("api/files/create", data)
+        result = bear_client.safe_post("api/files/create", data)
         if result.get("success"):
             logger.info(f"File created successfully: {filename}")
         else:
@@ -1002,7 +1002,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "append": append
         }
         logger.info(f"Modifying file: {filename}")
-        result = binarybear_client.safe_post("api/files/modify", data)
+        result = bear_client.safe_post("api/files/modify", data)
         if result.get("success"):
             logger.info(f"File modified successfully: {filename}")
         else:
@@ -1022,7 +1022,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
         """
         data = {"filename": filename}
         logger.info(f"Deleting file: {filename}")
-        result = binarybear_client.safe_post("api/files/delete", data)
+        result = bear_client.safe_post("api/files/delete", data)
         if result.get("success"):
             logger.info(f"File deleted successfully: {filename}")
         else:
@@ -1041,7 +1041,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             Directory listing results
         """
         logger.info(f"Listing files in directory: {directory}")
-        result = binarybear_client.safe_get("api/files/list", {"directory": directory})
+        result = bear_client.safe_get("api/files/list", {"directory": directory})
         if result.get("success"):
             file_count = len(result.get("files", []))
             logger.info(f"Listed {file_count} files in {directory}")
@@ -1070,7 +1070,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             "env_name": env_name
         }
         logger.info(f"Installing Python package: {package} in env {env_name}")
-        result = binarybear_client.safe_post("api/python/install", data)
+        result = bear_client.safe_post("api/python/install", data)
         if result.get("success"):
             logger.info(f"Package {package} installed successfully")
         else:
@@ -1098,7 +1098,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             data["filename"] = filename
 
         logger.info(f"Executing Python script in env {env_name}")
-        result = binarybear_client.safe_post("api/python/execute", data)
+        result = bear_client.safe_post("api/python/execute", data)
         if result.get("success"):
             logger.info(f"Python script executed successfully")
         else:
@@ -1112,13 +1112,13 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
     @mcp.tool()
     def server_health() -> Dict[str, Any]:
         """
-        Check the health status of the BinaryBear server.
+        Check the health status of the BEAR server.
 
         Returns:
             Server health information with tool availability
         """
-        logger.info(f"Checking BinaryBear server health")
-        result = binarybear_client.check_health()
+        logger.info(f"Checking BEAR server health")
+        result = bear_client.check_health()
         if result.get("status") == "healthy":
             logger.info(f"Server is healthy - {result.get('total_tools_available', 0)} tools available")
         else:
@@ -1134,7 +1134,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             Cache performance statistics
         """
         logger.info(f"Getting cache statistics")
-        result = binarybear_client.safe_get("api/cache/stats")
+        result = bear_client.safe_get("api/cache/stats")
         if "hit_rate" in result:
             logger.info(f"Cache hit rate: {result.get('hit_rate', 'unknown')}")
         return result
@@ -1148,7 +1148,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             Cache clear operation results
         """
         logger.info(f"Clearing server cache")
-        result = binarybear_client.safe_post("api/cache/clear", {})
+        result = bear_client.safe_post("api/cache/clear", {})
         if result.get("success"):
             logger.info(f"Cache cleared successfully")
         else:
@@ -1164,7 +1164,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             System performance and usage telemetry
         """
         logger.info(f"Getting system telemetry")
-        result = binarybear_client.safe_get("api/telemetry")
+        result = bear_client.safe_get("api/telemetry")
         if "commands_executed" in result:
             logger.info(f"Commands executed: {result.get('commands_executed', 0)}")
         return result
@@ -1183,7 +1183,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
         """
         try:
             logger.info(f"Executing command: {command}")
-            result = binarybear_client.execute_command(command, use_cache)
+            result = bear_client.execute_command(command, use_cache)
             if "error" in result:
                 logger.error(f"Command failed: {result['error']}")
                 return {
@@ -1222,7 +1222,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             List of active processes with their status
         """
         logger.info("Listing active processes")
-        result = binarybear_client.safe_get("api/processes/list")
+        result = bear_client.safe_get("api/processes/list")
         if result.get("success"):
             logger.info(f"Found {result.get('total_count', 0)} active processes")
         else:
@@ -1241,7 +1241,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             Process status information
         """
         logger.info(f"Checking status of process {pid}")
-        result = binarybear_client.safe_get(f"api/processes/status/{pid}")
+        result = bear_client.safe_get(f"api/processes/status/{pid}")
         if result.get("success"):
             logger.info(f"Process {pid} status retrieved")
         else:
@@ -1260,7 +1260,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             Success status of the termination operation
         """
         logger.info(f"Terminating process {pid}")
-        result = binarybear_client.safe_post(f"api/processes/terminate/{pid}", {})
+        result = bear_client.safe_post(f"api/processes/terminate/{pid}", {})
         if result.get("success"):
             logger.info(f"Process {pid} terminated successfully")
         else:
@@ -1279,7 +1279,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             Success status of the pause operation
         """
         logger.info(f"Pausing process {pid}")
-        result = binarybear_client.safe_post(f"api/processes/pause/{pid}", {})
+        result = bear_client.safe_post(f"api/processes/pause/{pid}", {})
         if result.get("success"):
             logger.info(f"Process {pid} paused successfully")
         else:
@@ -1298,7 +1298,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             Success status of the resume operation
         """
         logger.info(f"Resuming process {pid}")
-        result = binarybear_client.safe_post(f"api/processes/resume/{pid}", {})
+        result = bear_client.safe_post(f"api/processes/resume/{pid}", {})
         if result.get("success"):
             logger.info(f"Process {pid} resumed successfully")
         else:
@@ -1314,7 +1314,7 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
             Real-time dashboard with process status
         """
         logger.info("Getting process dashboard")
-        result = binarybear_client.safe_get("api/processes/dashboard")
+        result = bear_client.safe_get("api/processes/dashboard")
         if result.get("success", True) and "total_processes" in result:
             total = result.get("total_processes", 0)
             logger.info(f"Dashboard retrieved: {total} active processes")
@@ -1327,9 +1327,9 @@ def setup_mcp_server(binarybear_client: BinaryBearClient) -> FastMCP:
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="BinaryBear Binary Analysis MCP Client")
-    parser.add_argument("--server", type=str, default=DEFAULT_BINARYBEAR_SERVER,
-                      help=f"BinaryBear API server URL (default: {DEFAULT_BINARYBEAR_SERVER})")
+    parser = argparse.ArgumentParser(description="BEAR - Binary Exploitation & Automated Reversing MCP Client")
+    parser.add_argument("--server", type=str, default=DEFAULT_BEAR_SERVER,
+                      help=f"BEAR API server URL (default: {DEFAULT_BEAR_SERVER})")
     parser.add_argument("--timeout", type=int, default=DEFAULT_REQUEST_TIMEOUT,
                       help=f"Request timeout in seconds (default: {DEFAULT_REQUEST_TIMEOUT})")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
@@ -1344,13 +1344,13 @@ def main():
         logger.setLevel(logging.DEBUG)
         logger.debug("Debug logging enabled")
 
-    logger.info(f"Starting BinaryBear Binary Analysis MCP Client")
+    logger.info(f"Starting BEAR MCP Client")
     logger.info(f"Connecting to: {args.server}")
 
     try:
-        binarybear_client = BinaryBearClient(args.server, args.timeout)
+        bear_client = BearClient(args.server, args.timeout)
 
-        health = binarybear_client.check_health()
+        health = bear_client.check_health()
         if "error" in health:
             logger.warning(f"Unable to connect to server at {args.server}: {health['error']}")
             logger.warning("MCP server will start, but tool execution may fail")
@@ -1358,8 +1358,8 @@ def main():
             logger.info(f"Successfully connected to server at {args.server}")
             logger.info(f"Server health status: {health['status']}")
 
-        mcp = setup_mcp_server(binarybear_client)
-        logger.info("Starting BinaryBear Binary Analysis MCP server")
+        mcp = setup_mcp_server(bear_client)
+        logger.info("Starting BEAR MCP server")
         logger.info("Ready to serve AI agents with binary analysis capabilities")
         mcp.run()
     except Exception as e:

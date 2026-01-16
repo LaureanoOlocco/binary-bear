@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BinaryBear Binary Analysis Server - Binary Analysis & Reverse Engineering Backend
+BEAR Server - Binary Exploitation & Automated Reversing Backend
 
 Specialized for Binary Analysis & Reverse Engineering
 Debuggers | Disassemblers | Exploit Development | Memory Forensics
@@ -23,7 +23,7 @@ TOOLS AVAILABLE (25+):
 - MSFVenom - Payload generator
 - UPX - Executable packer/unpacker
 
-Architecture: REST API backend for BinaryBear MCP client
+Architecture: REST API backend for BEAR MCP client
 Framework: Flask with enhanced command execution and caching
 """
 
@@ -56,7 +56,7 @@ try:
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(sys.stdout),
-            logging.FileHandler('binarybear.log')
+            logging.FileHandler('bear.log')
         ]
     )
 except PermissionError:
@@ -73,14 +73,14 @@ app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
 # API Configuration
-API_PORT = int(os.environ.get('BINARYBEAR_PORT', 8888))
-API_HOST = os.environ.get('BINARYBEAR_HOST', '127.0.0.1')
+API_PORT = int(os.environ.get('BEAR_PORT', 8888))
+API_HOST = os.environ.get('BEAR_HOST', '127.0.0.1')
 DEBUG_MODE = False
 
 # Command execution settings
-COMMAND_TIMEOUT = int(os.environ.get('BINARYBEAR_TIMEOUT', 300))
-CACHE_SIZE = int(os.environ.get('BINARYBEAR_CACHE_SIZE', 1000))
-CACHE_TTL = int(os.environ.get('BINARYBEAR_CACHE_TTL', 3600))
+COMMAND_TIMEOUT = int(os.environ.get('BEAR_TIMEOUT', 300))
+CACHE_SIZE = int(os.environ.get('BEAR_CACHE_SIZE', 1000))
+CACHE_TTL = int(os.environ.get('BEAR_CACHE_TTL', 3600))
 
 # Global process management
 active_processes: Dict[int, Dict[str, Any]] = {}
@@ -114,21 +114,21 @@ class ModernVisualEngine:
 
     @staticmethod
     def create_banner() -> str:
-        """Create the BinaryBear banner"""
+        """Create the BEAR banner"""
         accent = ModernVisualEngine.COLORS['HACKER_RED']
         RESET = ModernVisualEngine.COLORS['RESET']
         BOLD = ModernVisualEngine.COLORS['BOLD']
         return f"""
 {accent}{BOLD}
-██████╗ ██╗███╗   ██╗ █████╗ ██████╗ ██╗   ██╗██████╗ ███████╗ █████╗ ██████╗
-██╔══██╗██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗
-██████╔╝██║██╔██╗ ██║███████║██████╔╝ ╚████╔╝ ██████╔╝█████╗  ███████║██████╔╝
-██╔══██╗██║██║╚██╗██║██╔══██║██╔══██╗  ╚██╔╝  ██╔══██╗██╔══╝  ██╔══██║██╔══██╗
-██████╔╝██║██║ ╚████║██║  ██║██║  ██║   ██║   ██████╔╝███████╗██║  ██║██║  ██║
-╚═════╝ ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝
+██████╗ ███████╗ █████╗ ██████╗
+██╔══██╗██╔════╝██╔══██╗██╔══██╗
+██████╔╝█████╗  ███████║██████╔╝
+██╔══██╗██╔══╝  ██╔══██║██╔══██╗
+██████╔╝███████╗██║  ██║██║  ██║
+╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝
 {RESET}
 {accent}┌─────────────────────────────────────────────────────────────────────────────┐
-│  {ModernVisualEngine.COLORS['BRIGHT_WHITE']}Binary Analysis & Reverse Engineering Server{accent}                            │
+│  {ModernVisualEngine.COLORS['BRIGHT_WHITE']}Binary Exploitation & Automated Reversing{accent}                                │
 │  {ModernVisualEngine.COLORS['CYBER_ORANGE']}Debuggers | Disassemblers | Exploit Development{accent}                         │
 └─────────────────────────────────────────────────────────────────────────────┘{RESET}
 """
@@ -160,7 +160,7 @@ class ModernVisualEngine:
 # CACHING SYSTEM
 # ============================================================================
 
-class BinaryBearCache:
+class BearCache:
     """Caching system for command results"""
 
     def __init__(self, max_size: int = CACHE_SIZE, ttl: int = CACHE_TTL):
@@ -214,7 +214,7 @@ class BinaryBearCache:
         }
 
 
-cache = BinaryBearCache()
+cache = BearCache()
 
 
 # ============================================================================
@@ -493,7 +493,7 @@ def execute_command(command: str, use_cache: bool = True, timeout: int = COMMAND
 class FileOperationsManager:
     """Handle file operations"""
 
-    def __init__(self, base_dir: str = "/tmp/binarybear_files"):
+    def __init__(self, base_dir: str = "/tmp/bear_files"):
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(exist_ok=True)
         self.max_file_size = 100 * 1024 * 1024
@@ -567,7 +567,7 @@ file_manager = FileOperationsManager()
 class PythonEnvironmentManager:
     """Manage Python virtual environments"""
 
-    def __init__(self, base_dir: str = "/tmp/binarybear_envs"):
+    def __init__(self, base_dir: str = "/tmp/bear_envs"):
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(exist_ok=True)
 
@@ -648,7 +648,7 @@ def health_check():
 
     return jsonify({
         "status": "healthy",
-        "message": "BinaryBear Binary Analysis Server is operational",
+        "message": "BEAR - Binary Exploitation & Automated Reversing Server is operational",
         "version": "1.0.0",
         "tools_status": tools_status,
         "total_tools_available": available_count,
@@ -1054,7 +1054,7 @@ def ghidra():
     try:
         params = request.json
         binary = params.get("binary", "")
-        project_name = params.get("project_name", "binarybear_analysis")
+        project_name = params.get("project_name", "bear_analysis")
         script_file = params.get("script_file", "")
         analysis_timeout = params.get("analysis_timeout", 300)
         output_format = params.get("output_format", "xml")
@@ -1721,7 +1721,7 @@ BANNER = ModernVisualEngine.create_banner()
 if __name__ == "__main__":
     print(BANNER)
 
-    parser = argparse.ArgumentParser(description="BinaryBear Binary Analysis Server")
+    parser = argparse.ArgumentParser(description="BEAR - Binary Exploitation & Automated Reversing Server")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument("--port", type=int, default=API_PORT, help=f"Port (default: {API_PORT})")
     args = parser.parse_args()
@@ -1733,7 +1733,7 @@ if __name__ == "__main__":
     if args.port != API_PORT:
         API_PORT = args.port
 
-    logger.info(f"Starting BinaryBear Binary Analysis Server on port {API_PORT}")
+    logger.info(f"Starting BEAR Server on port {API_PORT}")
     logger.info(f"Debug mode: {DEBUG_MODE}")
     logger.info(f"Cache size: {CACHE_SIZE} | TTL: {CACHE_TTL}s")
     logger.info(f"Command timeout: {COMMAND_TIMEOUT}s")
