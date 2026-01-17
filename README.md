@@ -4,7 +4,7 @@
   <img src="assets/bear-logo.png" width="400" alt="BEAR logo">
 </p>
 
-# BEAR v1.0
+# BEAR v1.1
 ### Binary Exploitation & Automated Reversing
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
@@ -92,7 +92,7 @@ python3 bear_server.py
 | Category | Tools |
 |----------|-------|
 | Debuggers | GDB, GDB-PEDA, GDB-GEF |
-| Disassemblers | Radare2, Ghidra (headless), Objdump |
+| Disassemblers | Radare2, Ghidra, Objdump |
 | Binary Inspection | Binwalk, Checksec, Strings, Readelf |
 | Exploit Dev | Pwntools, ROPgadget, Ropper, One-Gadget |
 | Memory Forensics | Volatility, Volatility3 |

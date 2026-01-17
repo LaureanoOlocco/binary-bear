@@ -1081,6 +1081,107 @@ def ghidra():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 
+def find_ghidra_headless():
+    """Find the analyzeHeadless script path"""
+    # Check common locations
+    possible_paths = [
+        shutil.which("analyzeHeadless"),
+        os.environ.get("GHIDRA_HEADLESS"),
+        os.path.expanduser("~/Documents/ghidra/ghidra_12.0_PUBLIC_20251205/ghidra_12.0_PUBLIC/support/analyzeHeadless"),
+        "/opt/ghidra/support/analyzeHeadless",
+        "/usr/local/ghidra/support/analyzeHeadless",
+    ]
+
+    for path in possible_paths:
+        if path and os.path.exists(path):
+            return path
+
+    # Try to find it dynamically
+    import glob
+    patterns = [
+        os.path.expanduser("~/Documents/ghidra/*/support/analyzeHeadless"),
+        os.path.expanduser("~/ghidra*/support/analyzeHeadless"),
+        "/opt/ghidra*/support/analyzeHeadless",
+    ]
+    for pattern in patterns:
+        matches = glob.glob(pattern)
+        if matches:
+            return matches[0]
+
+    return None
+
+
+@app.route("/api/tools/ghidra/decompile", methods=["POST"])
+def ghidra_decompile():
+    """Decompile binary using Ghidra headless mode with custom script"""
+    try:
+        params = request.json
+        binary = params.get("binary", "")
+        function_name = params.get("function", "all")
+        analysis_timeout = params.get("timeout", 300)
+
+        if not binary:
+            return jsonify({"error": "Binary parameter is required"}), 400
+
+        if not os.path.exists(binary):
+            return jsonify({"error": f"Binary not found: {binary}"}), 400
+
+        # Find Ghidra analyzeHeadless
+        ghidra_headless = find_ghidra_headless()
+        if not ghidra_headless:
+            return jsonify({"error": "Ghidra analyzeHeadless not found. Set GHIDRA_HEADLESS environment variable."}), 500
+
+        # Get the script path relative to this file
+        script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ghidra_scripts")
+        decompile_script = "DecompileFunction.java"
+
+        if not os.path.exists(os.path.join(script_dir, decompile_script)):
+            return jsonify({"error": f"Decompile script not found: {script_dir}/{decompile_script}"}), 500
+
+        project_dir = f"/tmp/ghidra_projects/decompile_{os.path.basename(binary)}_{int(time.time())}"
+        os.makedirs(project_dir, exist_ok=True)
+
+        # Build the command
+        command = f'"{ghidra_headless}" "{project_dir}" decompile_project -import "{binary}" -scriptPath "{script_dir}" -postScript {decompile_script} "{function_name}" -deleteProject'
+
+        result = execute_command(command, timeout=analysis_timeout)
+
+        # Parse the JSON output from the script
+        if result.get("success") and result.get("stdout"):
+            stdout = result["stdout"]
+            start_marker = "===BEAR_JSON_START==="
+            end_marker = "===BEAR_JSON_END==="
+
+            if start_marker in stdout and end_marker in stdout:
+                json_start = stdout.index(start_marker) + len(start_marker)
+                json_end = stdout.index(end_marker)
+                json_str = stdout[json_start:json_end].strip()
+
+                try:
+                    decompiled = json.loads(json_str)
+                    return jsonify({
+                        "success": True,
+                        "binary": binary,
+                        "function": function_name,
+                        "decompiled": decompiled
+                    })
+                except json.JSONDecodeError as e:
+                    return jsonify({
+                        "success": False,
+                        "error": f"Failed to parse decompilation output: {str(e)}",
+                        "raw_output": stdout
+                    })
+
+        return jsonify({
+            "success": False,
+            "error": "Decompilation failed or produced no output",
+            "details": result
+        })
+
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+
 @app.route("/api/tools/binwalk", methods=["POST"])
 def binwalk():
     """Execute Binwalk for firmware analysis"""

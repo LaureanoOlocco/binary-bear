@@ -359,6 +359,35 @@ def setup_mcp_server(bear_client: BearClient) -> FastMCP:
         return result
 
     @mcp.tool()
+    def ghidra_decompile(binary: str, function: str = "all", timeout: int = 300) -> Dict[str, Any]:
+        """
+        Decompile a binary using Ghidra and return C-like pseudocode.
+
+        Args:
+            binary: Path to the binary file to decompile
+            function: Function to decompile - can be:
+                      - "all" to decompile all functions
+                      - function name (e.g., "main", "vulnerable_func")
+                      - address (e.g., "0x401000")
+            timeout: Analysis timeout in seconds (default 300)
+
+        Returns:
+            Decompiled C-like pseudocode for the specified function(s)
+        """
+        data = {
+            "binary": binary,
+            "function": function,
+            "timeout": timeout
+        }
+        logger.info(f"Starting Ghidra decompilation: {binary} function={function}")
+        result = bear_client.safe_post("api/tools/ghidra/decompile", data)
+        if result.get("success"):
+            logger.info(f"Ghidra decompilation completed for {binary}")
+        else:
+            logger.error(f"Ghidra decompilation failed for {binary}")
+        return result
+
+    @mcp.tool()
     def binwalk_analyze(file_path: str, extract: bool = False, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Binwalk for firmware and file analysis.
