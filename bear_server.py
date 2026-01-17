@@ -624,6 +624,42 @@ python_env_manager = PythonEnvironmentManager()
 
 
 # ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+def find_ghidra_headless():
+    """Find the analyzeHeadless script path"""
+    import glob
+    # Check common locations
+    possible_paths = [
+        shutil.which("analyzeHeadless"),
+        os.environ.get("GHIDRA_HEADLESS"),
+        os.path.expanduser("~/Documents/ghidra/ghidra_12.0_PUBLIC_20251205/ghidra_12.0_PUBLIC/support/analyzeHeadless"),
+        "/opt/ghidra/support/analyzeHeadless",
+        "/usr/local/ghidra/support/analyzeHeadless",
+    ]
+
+    for path in possible_paths:
+        if path and os.path.exists(path):
+            return path
+
+    # Try to find it dynamically
+    patterns = [
+        os.path.expanduser("~/Documents/ghidra/*/*/support/analyzeHeadless"),
+        os.path.expanduser("~/Documents/ghidra/*/support/analyzeHeadless"),
+        os.path.expanduser("~/ghidra*/support/analyzeHeadless"),
+        "/opt/ghidra*/support/analyzeHeadless",
+        "/opt/ghidra/*/*/support/analyzeHeadless",
+    ]
+    for pattern in patterns:
+        matches = glob.glob(pattern)
+        if matches:
+            return matches[0]
+
+    return None
+
+
+# ============================================================================
 # API ROUTES - HEALTH & SYSTEM
 # ============================================================================
 
@@ -632,7 +668,7 @@ def health_check():
     """Health check endpoint"""
     binary_tools = [
         "gdb", "radare2", "binwalk", "ropgadget", "checksec", "objdump",
-        "ghidra", "one-gadget", "ropper", "angr", "pwninit", "strings",
+        "one-gadget", "ropper", "angr", "pwninit", "strings",
         "xxd", "readelf", "hexdump", "upx", "volatility", "msfvenom"
     ]
 
@@ -643,6 +679,9 @@ def health_check():
             tools_status[tool] = result["success"]
         except:
             tools_status[tool] = False
+
+    # Check Ghidra separately using find_ghidra_headless
+    tools_status["ghidra"] = find_ghidra_headless() is not None
 
     available_count = sum(1 for available in tools_status.values() if available)
 
@@ -1046,69 +1085,6 @@ def radare2():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-
-@app.route("/api/tools/ghidra", methods=["POST"])
-def ghidra():
-    """Execute Ghidra for advanced binary analysis (headless)"""
-    try:
-        params = request.json
-        binary = params.get("binary", "")
-        project_name = params.get("project_name", "bear_analysis")
-        script_file = params.get("script_file", "")
-        analysis_timeout = params.get("analysis_timeout", 300)
-        output_format = params.get("output_format", "xml")
-        additional_args = params.get("additional_args", "")
-
-        if not binary:
-            return jsonify({"error": "Binary parameter is required"}), 400
-
-        project_dir = f"/tmp/ghidra_projects/{project_name}"
-        os.makedirs(project_dir, exist_ok=True)
-
-        command = f"analyzeHeadless {project_dir} {project_name} -import {binary} -deleteProject"
-
-        if script_file:
-            command += f" -postScript {script_file}"
-        if output_format == "xml":
-            command += f" -postScript ExportXml.java {project_dir}/analysis.xml"
-        if additional_args:
-            command += f" {additional_args}"
-
-        result = execute_command(command, timeout=analysis_timeout)
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-
-def find_ghidra_headless():
-    """Find the analyzeHeadless script path"""
-    # Check common locations
-    possible_paths = [
-        shutil.which("analyzeHeadless"),
-        os.environ.get("GHIDRA_HEADLESS"),
-        os.path.expanduser("~/Documents/ghidra/ghidra_12.0_PUBLIC_20251205/ghidra_12.0_PUBLIC/support/analyzeHeadless"),
-        "/opt/ghidra/support/analyzeHeadless",
-        "/usr/local/ghidra/support/analyzeHeadless",
-    ]
-
-    for path in possible_paths:
-        if path and os.path.exists(path):
-            return path
-
-    # Try to find it dynamically
-    import glob
-    patterns = [
-        os.path.expanduser("~/Documents/ghidra/*/support/analyzeHeadless"),
-        os.path.expanduser("~/ghidra*/support/analyzeHeadless"),
-        "/opt/ghidra*/support/analyzeHeadless",
-    ]
-    for pattern in patterns:
-        matches = glob.glob(pattern)
-        if matches:
-            return matches[0]
-
-    return None
 
 
 @app.route("/api/tools/ghidra/decompile", methods=["POST"])
