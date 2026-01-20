@@ -687,6 +687,7 @@ def health_check():
             tools_status[tool] = False
 
     # Check Ghidra separately using find_ghidra_headless
+    logger.info("Checking: Ghidra installation")
     tools_status["ghidra"] = find_ghidra_headless() is not None
 
     available_count = sum(1 for available in tools_status.values() if available)
